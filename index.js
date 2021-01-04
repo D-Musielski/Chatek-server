@@ -1,9 +1,10 @@
 const express = require('express');
+const { v4: uuidv4 } = require('uuid');
 const app = express();
 const server = require('http').createServer(app);
 const io = require('socket.io')(server, {
   cors: {
-    origin: "http://localhost:19006",
+    origin: "http://192.168.56.1:19006",
     methods: ["GET", "POST"]
   }
 });
@@ -13,7 +14,7 @@ app.get('/', (req, res) => {
   res.sendFile(__dirname + '/index.html');
 });
 
-let numUsers = 0;
+// let numUsers = 0;
 
 // io.on('connection', (socket) => {
 //   let addedUser = false;
@@ -73,40 +74,43 @@ let numUsers = 0;
 //     }
 //   });
 // });
+
 const clients = [];
 io.on('connection', function (socket) {
   clients.push(socket);
+
   //firstly add player to room until opponent aren't come
   socket.join('waiting room');
+  connectRandomClients();
+
   socket.on('new message', (data) => {
     console.log([...socket.rooms]);
     console.log('message', data);
-    // we tell the client to execute 'new message'
+
     socket.to([...socket.rooms][1]).emit('new message', {
       senderId: data.senderId,
       content: data.content
     });
   });
-  socket.on('disconnect', () => {
+
+  socket.on('new chat', () => {
     socket.leave([...socket.rooms][1]);
     socket.join('waiting room');
     clients.push(socket);
+    connectRandomClients();
   });
-  joinWaitingPlayers();
 });
 
-async function joinWaitingPlayers() {
+async function connectRandomClients() {
   console.log(clients.length);
   if (clients.length >= 2) {
-    //if we have a couple, then start the game
-    const newRoomId = Math.floor(Math.random() * 1000000);
+    const room = uuidv4();
 
-    // live "waiting room"
     clients[0].leave('waiting room');
     clients[1].leave('waiting room');
-    // and then join both to another room
-    clients[0].join(newRoomId);
-    clients[1].join(newRoomId);
+
+    clients[0].join(room);
+    clients[1].join(room);
 
     clients.shift();
     clients.shift();
