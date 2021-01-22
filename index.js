@@ -79,7 +79,6 @@ const clients = [];
 io.on('connection', function (socket) {
   clients.push(socket);
 
-  //firstly add player to room until opponent aren't come
   socket.join('waiting room');
   connectRandomClients();
 
@@ -94,14 +93,17 @@ io.on('connection', function (socket) {
   });
 
   socket.on('new chat', () => {
-    socket.leave([...socket.rooms][1]);
-    socket.join('waiting room');
-    clients.push(socket);
-    connectRandomClients();
+    if ([...socket.rooms][1] !== 'waiting room') {
+      socket.to([...socket.rooms][1]).emit('partner disconnected');
+      socket.leave([...socket.rooms][1]);
+      socket.join('waiting room');
+      clients.push(socket);
+      connectRandomClients();
+    }
   });
 });
 
-async function connectRandomClients() {
+function connectRandomClients() {
   console.log(clients.length);
   if (clients.length >= 2) {
     const room = uuidv4();
@@ -111,6 +113,9 @@ async function connectRandomClients() {
 
     clients[0].join(room);
     clients[1].join(room);
+
+    clients[0].emit('new chat');
+    clients[1].emit('new chat');
 
     clients.shift();
     clients.shift();
