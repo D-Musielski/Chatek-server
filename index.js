@@ -92,6 +92,14 @@ io.on('connection', function (socket) {
     });
   });
 
+  socket.on('start typing', () => {
+    socket.to([...socket.rooms][1]).emit('start typing');
+  })
+
+  socket.on('stop typing', () => {
+    socket.to([...socket.rooms][1]).emit('stop typing');
+  })
+
   socket.on('new chat', () => {
     if ([...socket.rooms][1] !== 'waiting room') {
       socket.to([...socket.rooms][1]).emit('partner disconnected');

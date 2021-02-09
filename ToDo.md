@@ -1,4 +1,4 @@
+- Add more events handling: typing, partner left, connected with partner, etc. ✅
 - Convert to TS
 - Add random users pairing
 - Add +/- 18 channels logic
-- Add more events handling: typing, partner left, connected with partner, etc.
